@@ -61,7 +61,7 @@ class Renderer(object):
         if x < self.vpX or x >= self.vpX + self.vpWidth or y < self.vpY or y >= self.vpY + self.vpHeight:
             return
 
-        if (0 < x < self.width) and (0 < y < self.height):
+        if (0 <= x < self.width) and (0 <= y < self.height):
             self.pixels[int(x)][int(y)] = color or self.curr_color
 
     # Changes the color of 1 pixel of the viewport
@@ -75,7 +75,7 @@ class Renderer(object):
         pixelX = (x+1) * (self.vpWidth/2) + self.vpX
         pixelY = (y+1) * (self.vpHeight/2) + self.vpY
 
-        if (-1 < x < 1) and (-1 < y < 1):
+        if (-1 <= x <= 1) and (-1 <= y <= 1):
             self.pixels[int(pixelX)][int(pixelY)] = color or self.curr_color
 
     # Creates a line from vertex 1 to vertex 2
