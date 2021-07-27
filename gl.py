@@ -1,5 +1,6 @@
 import struct
 from collections import namedtuple
+from obj import Obj
 
 V2 = namedtuple('Point2', ['x', 'y'])
 
@@ -85,6 +86,11 @@ class Renderer(object):
         y0 = v0.y
         y1 = v1.y
 
+        # Avoids drawing a line from one position to itself
+        if x0 == x1 and y0 == y1:
+            self.glPoint(x0, y1)
+            return
+
         # Gets the differentials in absolute value so that the slope is always positive
         dx = abs(x1 - x0)
         dy = abs(y1 - y0)
@@ -120,6 +126,30 @@ class Renderer(object):
                 y += 1 if y0 < y1 else -1
                 limit += 1
 
+    # Loades an .obj model on screen
+    def glLoadModel(self, filename, translate = V2(0.0,0.0),scale = V2(1.0,1.0), prev = False):
+        model = Obj(filename)
+
+        for face in model.faces:
+            vertCount = len(face)
+
+            for v in range(vertCount):
+                index0 = face[v][0] - 1 # Minus 1 because of .obj format
+                index1 = face[(v + 1) % vertCount][0] - 1
+
+                vert0 = model.vertices[index0]
+                vert1 = model.vertices[index1]
+
+                x0 = int(vert0[0] * scale.x + translate.x)
+                y0 = int(vert0[2] * scale.y + translate.y)
+                x1 = int(vert1[0] * scale.x + translate.x)
+                y1 = int(vert1[2] * scale.y + translate.y)
+
+                if prev:
+                    self.glPoint(x0, y0)
+                else:
+                    self.glLine(V2(x0, y0), V2(x1, y1))
+                # self.glPoint(x0, y0)
 
     def glFinish(self, filename):
         with open(filename, "wb") as file:
