@@ -1,6 +1,7 @@
 import struct
 from collections import namedtuple
 from obj import Obj
+from math import acos, degrees, sqrt
 
 V2 = namedtuple('Point2', ['x', 'y'])
 
@@ -208,6 +209,7 @@ class Renderer(object):
                     self.glLine(V2(x0, y0), V2(x1, y1))
                 # self.glPoint(x0, y0)
 
+    # Draws the lines of a polygon
     def glPoly(self, poly, color = None):
         for p in range(len(poly)):
             nextIndex = p + 1
@@ -226,9 +228,7 @@ class Renderer(object):
                 inity = poly[0].y
                 self.glLine(V2(x0, y0), V2(initx, inity), color)
 
-
-
-    # Filled poly
+    # Draws a filled polygon
     def glSolidPoly(self, poly, color = None):
         #Verifies there is at least 3 vertexes
         if len(poly) < 3:
@@ -279,36 +279,162 @@ class Renderer(object):
         xmax = max(xverts)
         ymin = min(yverts)
         ymax = max(yverts)
-
-        print(xmin, xmax, ymin, ymax)
         
         ycount = ymin
         xcount = xmin
-        intercount = 0
+        intercount = []
 
         while ycount < ymax:
             while xcount < xmax:
                 for line in linesdata:
                     for point in line:
                         if point.x == xcount and point.y == ycount:
-                            intercount += 1
-                if intercount > 0:
-                    if (intercount%2) != 0:
-                        self.glPoint(xcount, ycount, color)
-                        xcount += 1
-                    else:
-                        xcount += 1
-                elif intercount == 0:
-                    xcount += 1
+                            intercount.append(V2(xcount, ycount))
+                # if len(intercount) > 0:
+                #     if (len(intercount)%2) != 0:
+                #         self.glPoint(xcount, ycount, color)
+                #         xcount += 1
+                #     else:
+                #         xcount += 1
+                # elif len(intercount) == 0:
+                xcount += 1
+            
+            if len(intercount) > 0:
+                if len(intercount) == 1:
+                    self.glPoint(intercount[0].x, intercount[0].y, color)
+                elif len(intercount) == 2:
+                    self.glLine(intercount[0], intercount[1], color)
+                elif len(intercount) == 3:
+                    self.glLine(intercount[0], intercount[1], color)
+                    self.glLine(intercount[1], intercount[2], color)
+                elif len(intercount) == 4:
+                    self.glLine(intercount[0], intercount[1], color)
+                    self.glLine(intercount[2], intercount[3], color)
+
+
+
             ycount += 1
             xcount = xmin
-            intercount = 0
-                                
-        
-        
-        
+            intercount = []
 
-    
+    # Draws a filled polygon through triangulation
+    def glPolyTest(self, poly, color = None):
+        
+        triList = []
+        vertIndex = 1
+        
+        while len(poly) >= 3:
+            # Find the angle for each vert
+            # Let b be the current vertex, and a, and c be the vertexes together
+            # angle = arcos((xa * xb + ya * yb)/(sqr(xa^2 + ya^2) * sqr(xb^2 + yb^2))
+            # angle = arcos( ((c.x - b.x) * (a.x - b.x) + (c.y - b.y) * (a.y - b.y)) / (sqrt() * sqrt())
+            
+            def cross(p1, p2, p3, p4):
+                xcomp1 = p2.x - p1.x
+                xcomp2 = p4.x - p3.x
+                ycomp1 = p2.y - p1.y
+                ycomp2 = p4.y - p3.y
+
+                return xcomp1 * ycomp2 - ycomp1 * xcomp2
+            
+            def getItem(array, index):
+                if index >= len(array):
+                    return array[index % len(array)]
+                elif index < 0:
+                    return array[index % len(array) + len(array)]
+                else:
+                    return array[index]
+
+
+
+
+            xa = None
+            ya = None
+
+            if (vertIndex + 1) < len(poly):
+                xa = poly[vertIndex + 1].x - poly[vertIndex].x
+                ya = poly[vertIndex + 1].y - poly[vertIndex].y
+            else:
+                xa = poly[0].x - poly[vertIndex].x
+                ya = poly[0].y - poly[vertIndex].y
+
+            xb = poly[vertIndex - 1].x - poly[vertIndex].x
+            yb = poly[vertIndex - 1].y - poly[vertIndex].y
+
+            # Angle in degrees from a certain vertex
+            angle = degrees(acos((xa * xb + ya * yb)/(sqrt(xa * xa + ya * ya) * sqrt(xb * xb + yb * yb))))
+            
+            if angle < 180:
+                print("Convex: ", angle)
+            elif angle > 180:
+                print("Reflex: ", angle)
+            elif angle == 180:
+                print("Straight: ", angle)
+
+            poly.pop(vertIndex)
+            if (vertIndex + 1) < len(poly):
+                vertIndex += 1
+            else:
+                vertIndex = 1
+            
+
+
+
+    # Draws a filled triangle
+    def glTriangle(self, A, B, C, color = None):
+        
+        self.glLine(A, B, color)
+        self.glLine(B, C, color)
+        self.glLine(C, A, color)
+
+        if A.y < B.y:
+            A, B = B, A
+        
+        if A.y < C.y:
+            A, C = C, A
+        
+        if B.y < C.y:
+            B, C = C, B
+        
+        def flatBottomTriangle(v1, v2, v3):
+            slope_2_1 = (v2.x - v1.x) / (v2.y - v1.y)
+            slope_3_1 = (v3.x - v1.x) / (v3.y - v1.y)
+
+            x1 = v2.x
+            x2 = v3.x
+
+            for y in range(v2.y, v1.y + 1):
+                self.glLine(V2(int(x1), int(y)), V2(int(x2), int(y)), color)
+                x1 += slope_2_1
+                x2 += slope_3_1
+
+        def flatTopTriangle(v1, v2, v3):
+            slope_3_1 = (v3.x - v1.x) / (v3.y - v1.y)
+            slope_3_2 = (v3.x - v2.x) / (v3.y - v2.y)
+
+            x1 = v3.x
+            x2 = v3.x
+
+            for y in range(v2.y, v1.y + 1):
+                self.glLine(V2(int(x1), int(y)), V2(int(x2), int(y)), color)
+                x1 += slope_3_1
+                x2 += slope_3_2
+
+        if B.y == C.y:
+            # Triangle with bottom side straight
+            flatBottomTriangle(A, B, C)
+        elif A.y == B.y:
+            # Triangle with upper side straight
+            flatTopTriangle(A, B, C)
+        else:
+            # Divide triangle in 2, and draw both
+            # Intercept Theorem
+            # ((A.x + (B.y - A.y)) / (C.y - A.y)) * (C.x - A.x)
+            D = V2(A.x + ((B.y - A.y) / (C.y - A.y)) * (C.x - A.x), B.y)
+
+            flatBottomTriangle(A, B, D)
+            flatTopTriangle(B, D, C)
+
     def glGetColor(self, pixel):
         print(self.pixels[int(pixel.x)][int(pixel.y)])
 

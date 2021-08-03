@@ -26,11 +26,24 @@ rend.glClearColor(0,0,0)
 rend.glColor(1,1,1)
 rend.glClear()
 
+#rend.glTriangle(V2(10, 10), V2(int(width/2), 400), V2(890, 10))
+
+# rend.glPoint(165, 380)
+# rend.glPoint(185, 360)
+# rend.glPoint(180, 330)
+# rend.glPoint(207, 345)
+# rend.glPoint(165, 380)
+# rend.glPoint(165, 380)
+# rend.glPoint(165, 380)
+# rend.glPoint(165, 380)
+
 rend.glSolidPoly(polyOne, color(1,0,0))
 rend.glSolidPoly(polyTwo, color(0,1,0))
 rend.glSolidPoly(polyThree, color(0,0,1))
 rend.glSolidPoly(polyFour, color(1,0,0))
 rend.glSolidPoly(polyFive, color(0,0,0))
+
+#rend.glPolyTest(polyOne, color(1,0,0))
 
 # for i in rend.glLinePoints(V2(165, 380), V2(185, 360)):
 #     rend.glPoint(i.x, i.y)
