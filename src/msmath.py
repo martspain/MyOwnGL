@@ -6,8 +6,10 @@ from math import sin, cos
 
 V2 = namedtuple('Point2', ['x', 'y'])
 V3 = namedtuple('Point3', ['x', 'y', 'z'])
+V4 = namedtuple('Point4', ['x', 'y', 'z', 'w'])
 
 pi = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067
+decimalPrecision = 4
 
 # Adds all values in array
 def add(array):
@@ -38,14 +40,39 @@ def add3(array):
         result = V3(result.x + point.x, result.y + point.y, result.z + point.z)
     return result
 
+# Adds points on 4 dimensional space
+def add4(A, B):
+    return V4(A.x + B.x, A.y + B.y, A.z + B.z, A.w + B.w)
+
+# Adds points in array on 4 dimensional space
+def add4(array):
+    result = V4(0,0,0,0)
+    for point in array:
+        result = V3(result.x + point.x, result.y + point.y, result.z + point.z, result.w + point.w)
+    return result
+
 def subtract2(A, B):
     return V2(A.x - B.x, A.y - B.y)
 
 def subtract3(A, B):
     return V3(A.x - B.x, A.y - B.y, A.z - B.z)
 
+def subtract4(A, B):
+    return V4(A.x - B.x, A.y - B.y, A.z - B.z, A.w - B.w)
+
 def dot(A, B):
     return A.x * B.x + A.y * B.y + A.z * B.z
+
+def dotArray(arrayOne, arrayTwo):
+    if len(arrayOne) != len(arrayTwo):
+        return
+    
+    result = 0
+
+    for i in range(len(arrayOne)):
+        result += round(arrayOne[i] * arrayTwo[i], decimalPrecision)
+    
+    return result
 
 def cross(A, B):
     i = ((A.y * B.z) - (A.z * B.y))
@@ -141,7 +168,7 @@ def degrees(radians):
 def radians(degrees):
     return (degrees * pi) / 180
 
-def identityMatrix(dimension):
+def idMatrix(dimension):
     mat = []
 
     if dimension > 0:
@@ -154,3 +181,235 @@ def identityMatrix(dimension):
                     mat[n].append(0)
     
     return mat
+
+# Tries to add two matrix, returns -1 if dimensions are not correct
+def addMatrix(A, B):
+
+    # Checks the type of the params
+    if type(A) != list or type(B) != list:
+        return -1
+
+    rowA = len(A)
+    rowB = len(B)
+
+    # Gets sure the matrix sent have content
+    if rowA <= 0 or rowB <= 0:
+        return -1
+    
+    colA = len(A[0])
+    colB = len(B[0])
+
+    # Gets sure the matrix dimensions are correct
+    if rowA != rowB or colA != colB:
+        return -1
+    else:
+        rows = rowA
+        cols = colA
+    
+    result = []
+
+    for row in range(rows):
+        result.append([])
+        for col in range(cols):
+            result[row].append(A[row][col] + B[row][col])
+
+    return result
+
+def multMatrix(A, B):
+    # Checks the type of the params is OK
+    if type(A) != list or type(B) != list:
+        return -1
+    
+    # Checks there is content in both matrix's rows
+    if len(A) <= 0 or len(B) <= 0:
+        return -1
+    
+    # Checks there is content in both matrix's cols
+    if len(A[0]) <= 0 or len(B[0]) <= 0:
+        return -1
+    
+    # Checks if the dimensions are correct (m x n * n x r)
+    rowA = len(A)
+    colA = len(A[0])
+    rowB = len(B)
+    colB = len(B[0])
+
+    if colA != rowB:
+        return -1
+
+    result = []
+    Btrans = transposeMatrix(B)
+
+    for row in range(rowA):
+        result.append([])
+        for col in range(colB):
+            result[row].append(dotArray(A[row], Btrans[col]))
+    
+    return result
+
+def scalarMultMatrix(scalar, matrix):
+    # Checks the type of the params is OK
+    if (type(scalar) != int and type(scalar) != float) or type(matrix) != list:
+        return -1
+    
+    # Checks there is content in the matrix's rows
+    if len(matrix) <= 0:
+        return -1
+    
+    # Checks there is content in the matrix's cols
+    if len(matrix[0]) <= 0:
+        return -1
+
+    result = []
+
+    for row in range(len(matrix)):
+        result.append([])
+        for col in range(len(matrix)):
+            result[row].append(round(scalar * matrix[row][col], decimalPrecision))
+    
+    return result
+
+
+# Tries to return the matrix's transpose, else returns -1
+def transposeMatrix(original):
+    
+    if type(original) != list:
+        return -1
+    if len(original) <= 0:
+        return -1
+    if len(original[0]) <= 0:
+        return -1
+    
+    rowCount = len(original)
+    colCount = len(original[0])
+
+    trans = []
+
+    for row in range(colCount):
+        trans.append([])
+        for col in range(rowCount):
+            # Switch rows for columns
+            trans[row].append(original[col][row])
+    
+    return trans
+
+def isSquareMatrix(matrix):
+    # Correct type
+    if type(matrix) != list:
+        return False
+    # Correct row's content
+    if len(matrix) <= 0:
+        return False
+    # Correct col's content
+    if len(matrix[0]) <= 0:
+        return False
+    # Correct dimensions (must be a square matrix)
+    if len(matrix) != len(matrix[0]):
+        return False
+    elif len(matrix) == len(matrix[0]):
+        return True
+
+def detMatrix(matrix):
+    # Checks if the param sent is a square matrix
+    if not isSquareMatrix(matrix):
+        return
+    
+    # Calculates the determinant of a 2x2 matrix
+    def calcTwoDim(mat):
+        det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0]
+        return det
+
+    # Find matrix's dimension
+    dim = len(matrix)
+    colCounter = 0
+
+    # Matrix 1x1
+    if dim == 1:
+        return matrix[0][0]
+    
+    # Matrix 2x2
+    elif dim == 2:
+        return calcTwoDim(matrix)
+    
+    # Matrix 3x3, 4x4, 5x5, ...
+    else:
+
+        detCollection = []
+
+        for i in range(dim):
+            
+            newMat = []
+
+            for row in range(dim):
+                newRow = []
+                if row != 0:
+                    for col in range(dim):
+                        if col != colCounter:
+                            newRow.append(matrix[row][col])
+                    newMat.append(newRow)
+            #print(newMat)
+            #print("---")
+            if len(newMat) == 2:
+                detCollection.append(calcTwoDim(newMat))
+            else:
+                detCollection.append(detMatrix(newMat))
+            
+            colCounter += 1
+        
+        sign = 1
+        result = 0
+        
+        for ind in range(dim):
+            result += sign * matrix[0][ind] * detCollection[ind]
+            sign = sign * -1
+        
+        return result
+
+def invMatrix(matrix):
+    # Checks if the param sent is a square matrix
+    if not isSquareMatrix(matrix):
+        return
+    
+    determinant = detMatrix(matrix)
+
+    if determinant == 0:
+        return
+
+    dim = len(matrix)
+
+    minorMatrix = []    
+
+    for r in range(dim):
+        minorMatrix.append([])
+        for c in range(dim):
+            newMat = []
+            for row in range(dim):
+                newRow = []
+                for col in range(dim):
+                    if row != r and col != c:
+                        newRow.append(matrix[row][col])
+                if len(newRow) > 0:
+                    newMat.append(newRow)
+            minorMatrix[r].append(detMatrix(newMat))
+
+    for row in range(dim):
+        for col in range(dim):
+            if (row+col)%2 == 0:
+                # +
+                minorMatrix[row][col] = minorMatrix[row][col] * 1
+            else:
+                # -
+                minorMatrix[row][col] = minorMatrix[row][col] * -1
+    
+    cofactorMatrix = minorMatrix
+
+    adjointMatrix = transposeMatrix(cofactorMatrix)
+
+    inverse = scalarMultMatrix((1/determinant), adjointMatrix)
+
+    return inverse
+    
+    
+    
+
+
