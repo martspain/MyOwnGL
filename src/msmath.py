@@ -60,6 +60,17 @@ def subtract3(A, B):
 def subtract4(A, B):
     return V4(A.x - B.x, A.y - B.y, A.z - B.z, A.w - B.w)
 
+def scalarVec(scalar, vector):
+    if len(vector) == 2:
+        answer = V2(scalar * vector.x, scalar * vector.y)
+        return answer
+    elif len(vector) == 3:
+        answer = V3(scalar * vector.x, scalar * vector.y, scalar * vector.z)
+        return answer
+    elif len(vector) == 4:
+        answer = V4(scalar * vector.x, scalar * vector.y, scalar * vector.z, scalar * vector.w)
+        return answer
+
 def dot(A, B):
     return A.x * B.x + A.y * B.y + A.z * B.z
 
@@ -86,7 +97,7 @@ def sqroot(dividend, maxPrecision = None):
     if maxPrecision:
         maxPreci = maxPrecision
     else:
-        maxPreci = 8
+        maxPreci = decimalPrecision
 
     isImaginarian = False
 
@@ -155,18 +166,31 @@ def normalize(vector):
         else:
             unitVec = V3(0,0,0)
         return unitVec
+    elif len(vector) == 4:
+        mag = sqroot(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z + vector.w * vector.w)
+        if mag != 0:
+            unitVec = V4(vector.x / mag, vector.y / mag, vector.z / mag, vector.w / mag)
+        else:
+            unitVec = V3(0,0,0)
+        return unitVec
 
-def sine(degrees):
-    return sin(radians(degrees))
+def sine(deg):
+    return round(sin(radians(deg)), decimalPrecision)
 
-def cosine(degrees):
-    return cos(radians(degrees))
+def cosine(deg):
+    return round(cos(radians(deg)), decimalPrecision)
 
-def degrees(radians):
-    return (radians * 180) / pi
+def tangent(deg):
+    if cosine(deg) == 0:
+        return
+    else:
+        return sine(deg) / cosine(deg)
 
-def radians(degrees):
-    return (degrees * pi) / 180
+def degrees(rad):
+    return (rad * 180) / pi
+
+def radians(deg):
+    return (deg * pi) / 180
 
 def idMatrix(dimension):
     mat = []

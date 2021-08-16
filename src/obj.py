@@ -62,9 +62,16 @@ class Texture(object):
                     self.pixels[x].append(color(r, g, b))
 
     def getColor(self, xcoord, ycoord):
-        if 0<=xcoord<1 and 0<=ycoord<1:
+        if 0 <= xcoord < 1 and 0 <= ycoord < 1:
             x = round(xcoord * self.width)
             y = round(ycoord * self.height)
+            # if y < len(self.pixels):
+            #     if x < len(self.pixels[y]):
+            #         return self.pixels[y][x]
+            #     else:
+            #         return color(0,0,0)
+            # else:
+            #     return color(0,0,0)
             return self.pixels[y][x]
         else:
             return color(0,0,0)
