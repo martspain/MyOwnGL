@@ -541,8 +541,10 @@ class Renderer(object):
 
         modelMatrix = self.glCreateObjectMatrix(translate, scale, rotate)
 
-        light = V3(0,0,-1)
+        light = V3(1,1,0)
         light = normalize(light)
+
+        #print("Poligonos: ", len(model.faces))
 
         for face in model.faces:
             print(str(round((model.faces.index(face)/len(model.faces)) * 100, 2)) + " %")
@@ -584,6 +586,10 @@ class Renderer(object):
             # if round((model.faces.index(face)/len(model.faces)) * 100, 2) == 91.33:
             #     print("Paso 4")
             #     print("a = ", a , " b = ", b, " c = ", c)
+
+            #if round((model.faces.index(face)/len(model.faces)) * 100, 2) == 25.58:
+            #print("Paso 4")
+            #print("a = ", a , " b = ", b, " c = ", c)
 
             self.glTriangle_bc(a, b, c, daColor = None, texCoords = (vt0,vt1,vt2), texture = texture, intensity = intensity)
 

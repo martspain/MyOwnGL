@@ -92,55 +92,58 @@ def cross(A, B):
     product = V3(i, j, k)
     return product
 
-def sqroot(dividend, maxPrecision = None):
+# def sqroot(dividend, maxPrecision = None):
     
-    if maxPrecision:
-        maxPreci = maxPrecision
-    else:
-        maxPreci = decimalPrecision
+#     if maxPrecision:
+#         maxPreci = maxPrecision
+#     else:
+#         maxPreci = decimalPrecision
 
-    isImaginarian = False
+#     isImaginarian = False
 
-    def decimalCount(num):
-        if str(num).find(".") >= 0:
-            decimals = str(num).split(".")
-            return len(decimals[1])
-        elif str(num).find(".") < 0:
-            return 0
+#     def decimalCount(num):
+#         if str(num).find(".") >= 0:
+#             decimals = str(num).split(".")
+#             return len(decimals[1])
+#         elif str(num).find(".") < 0:
+#             return 0
 
-    if dividend < 0:
-        dividend = abs(dividend)
-        isImaginarian = True
+#     if dividend < 0:
+#         dividend = abs(dividend)
+#         isImaginarian = True
 
-    if dividend == 0:
-        return 0
-    elif 0 < abs(dividend) < 10:
-        divisor = 1.1
-    elif 10 <= abs(dividend) < 10000:
-        divisor = 10
-    elif 10000 <= abs(dividend) < 1000000:
-        divisor = 100
-    else:
-        divisor = 1000
+#     if dividend == 0:
+#         return 0
+#     elif 0 < abs(dividend) < 10:
+#         divisor = 1.1
+#     elif 10 <= abs(dividend) < 10000:
+#         divisor = 10
+#     elif 10000 <= abs(dividend) < 1000000:
+#         divisor = 100
+#     else:
+#         divisor = 1000
     
-    done = False
+#     done = False
 
-    while not done:
-        quotient = dividend / divisor
-        precision = min(decimalCount(quotient), decimalCount(divisor))
-        if precision > maxPreci:
-            precision = maxPreci
+#     while not done:
+#         quotient = dividend / divisor
+#         precision = min(decimalCount(quotient), decimalCount(divisor))
+#         if precision > maxPreci:
+#             precision = maxPreci
         
-        if round(quotient, precision) < round(divisor, precision):
-            divisor -= ((divisor - quotient) / 2)
-        elif round(quotient, precision) > round(divisor, precision):
-            divisor += ((quotient - divisor) / 2)
-        elif round(quotient, precision) == round(divisor, precision):
-            done = True
-            if isImaginarian:
-                return str(round(quotient, precision)) + " i"
-            elif not isImaginarian:
-                return round(quotient, precision)
+#         if round(quotient, precision) < round(divisor, precision):
+#             divisor -= ((divisor - quotient) / 2)
+#         elif round(quotient, precision) > round(divisor, precision):
+#             divisor += ((quotient - divisor) / 2)
+#         elif round(quotient, precision) == round(divisor, precision):
+#             done = True
+#             if isImaginarian:
+#                 return str(round(quotient, precision)) + " i"
+#             elif not isImaginarian:
+#                 return round(quotient, precision)
+
+def sqroot(dividend):
+    return pow(dividend, 0.5)
 
 def power(base, exp):
     # TODO 
@@ -401,7 +404,7 @@ def invMatrix(matrix):
 
     dim = len(matrix)
 
-    minorMatrix = []    
+    minorMatrix = []
 
     for r in range(dim):
         minorMatrix.append([])

@@ -9,77 +9,38 @@ from math import tan
 width = 1080
 height = 1080
 
-#Se crea la instancia
+# #Se crea la instancia
 rend = Renderer(width, height)
 
 rend.glClearColor(0,0,0)
 rend.glColor(1,1,1)
 rend.glClear()
 
-modelTex = Texture("models/model.bmp")
-modelPos = V3(0,0,-2)
+#modelTex = Texture("models/model.bmp")
 
-rend.glLookAt(modelPos, V3(0,0,0))
+# Medium Shot
+# modelPos = V3(75, -900, -300)
+# rend.glLookAt(V3(0,0,-300), V3(0,0,0))
+# rend.glLoadModel("models/statue.obj", None, modelPos, scale= V3(5, 5, 5), rotate=V3(-90,0,0))
 
-rend.glLoadModel("models/model.obj", modelTex, modelPos, scale= V3(1, 1, 1), rotate=V3(0,45,0))
+# Low Angle
+# modelPos = V3(75, -500, -500)
+# rend.glLookAt(V3(75, 150, -500), V3(0,-150,0))
+# rend.glLoadModel("models/statue.obj", None, modelPos, scale= V3(5, 5, 5), rotate=V3(-90,0,0))
+
+# High Angle
+# modelPos = V3(75, -600, -500)
+# rend.glLookAt(V3(75, -200, -500), V3(0,0,0))
+# rend.glLoadModel("models/statue.obj", None, modelPos, scale= V3(3, 3, 3), rotate=V3(-90,0,0))
+
+# Dutch Angle
+# modelPos = V3(-200, -200, -500)
+# rend.glLookAt(V3(0, 0, -500), V3(0,0,0))
+# rend.glLoadModel("models/statue.obj", None, modelPos, scale= V3(3, 3, 3), rotate=V3(-90,45,-45))
+
+# Standard
+modelPos = V3(0, -250, -500)
+rend.glLookAt(V3(0, 0, -500), V3(0,0,0))
+rend.glLoadModel("models/statue.obj", None, modelPos, scale= V3(2.5, 2.5, 2.5), rotate=V3(-90,0,0))
 
 rend.glFinish("output.bmp")
-
-matA = [
-    [1, 2, 3],
-    [-5, 7, 10],
-    [3, -9, 4]
-]
-matB = [
-    [4, 5, 2],
-    [2, 8, 1],
-    [-4, -5, -1]
-]
-matC = [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]
-]
-matD = [
-    [1,2,3,4],
-    [5,6,7,8]
-]
-matE = [
-    [1, 3, -1],
-    [-2, -1, 1]
-]
-matF = [
-    [-4,  0,  3, -1],
-    [ 5, -2, -1,  1],
-    [-1,  2,  0,  6],
-    [ 2, -3,  4,  7]
-]
-matG =[
-    [1, 2],
-    [3, 4]
-]
-matH = [
-    [0, 0],
-    [0, 0]
-]
-matI = [
-    [3,6,3,4,1],
-    [9,4,7,-8,3],
-    [-5,0,9,-12,-5],
-    [-1,-4,2,-10,11],
-    [2,-7,5,14,-21]
-]
-matJ =[
-    [3,0,2],
-    [2,0,-2],
-    [0,1,1]
-]
-matK = [
-    [1],
-    [3],
-    [5],
-    [7]
-]
-
-#print(multMatrix(matF, matK))
-#print(invMatrix(matI))
