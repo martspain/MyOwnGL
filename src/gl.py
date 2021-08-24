@@ -1,5 +1,5 @@
 import struct
-from msmath import V2, V3, V4, cross, dot, multMatrix, sine, cosine, tangent, sqroot, normalize, subtract3, invMatrix, scalarVec
+from msmath import *
 from obj import Obj, Texture
 
 def char(c):
@@ -40,10 +40,15 @@ White = color(1,1,1)
 class Renderer(object):
     # Init
     def __init__(self, width, height):
-        self.curr_color = Black
-        self.clear_color = White
+        self.curr_color = White
+        self.clear_color = Black
         self.glViewMatrix()
         self.glCreateWindow(width, height)
+
+        self.active_texture = None
+        self.normal_map = None
+        self.active_shader = None
+        self.directional_light = V3(0,0,-1)
     
     # Creates the window
     def glCreateWindow(self, width, height):
@@ -78,7 +83,8 @@ class Renderer(object):
 
     # Gets the color of the specified pixel
     def glGetColor(self, pixel):
-        print(self.pixels[int(pixel.x)][int(pixel.y)])
+        result = self.pixels[int(pixel.x)][int(pixel.y)]
+        return result[0], result[1], result[2]
 
     # Changes background color
     def glClearColor(self, r, g, b):
@@ -319,7 +325,7 @@ class Renderer(object):
             intercount = []
             
     # Draws a filled triangle using barycentric coordinates
-    def glTriangle_bc(self, A, B, C, daColor = None,  intensity = 1, texture = None, texCoords = ()):
+    def glTriangle_bc(self, A, B, C, daColor = None, texCoords = (), norms = (), verts = ()):
         
         #Bounding Box
         minx = round(min(A.x, B.x, C.x))
@@ -335,22 +341,28 @@ class Renderer(object):
                     
                     z = A.z * u + B.z * v + C.z * w
 
-                    if texture:
-                        tA, tB, tC = texCoords
-                        xtex = tA[0] * u + tB[0] * v + tC[0] * w
-                        ytex = tA[1] * u + tB[1] * v + tC[1] * w
+                    # if self.active_texture:
+                    #     tA, tB, tC = texCoords
+                    #     xtex = tA[0] * u + tB[0] * v + tC[0] * w
+                    #     ytex = tA[1] * u + tB[1] * v + tC[1] * w
 
-                        daColor = texture.getColor(xtex, ytex)
-                    else:
-                        if not daColor:
-                            daColor = self.curr_color
+                    #     daColor = self.active_texture.getColor(xtex, ytex)
+                    # else:
+                    #     if not daColor:
+                    #         daColor = self.curr_color
 
                     if 0 <= x < self.width and 0 <= y < self.height:
                         if z < self.zbuffer[x][y] and z <= 1 and z >= -1:
+                            
+                            if self.active_shader:
+                                r, g, b = self.active_shader(self, verts=verts, baryCoords=(u,v,w), texCoords=texCoords, normals = norms, color= daColor or self.curr_color)
+                            else:
+                                b, g, r = daColor or self.curr_color
+                                b /= 255
+                                g /= 255
+                                r /= 255
 
-                            self.glPoint(x,y, color(daColor[2] * intensity / 255,
-                                                    daColor[1] * intensity / 255,
-                                                    daColor[0] * intensity / 255) )
+                            self.glPoint(x,y, color(r, g, b))
                             self.zbuffer[x][y] = z
 
     # Draws a filled triangle
@@ -455,7 +467,25 @@ class Renderer(object):
                              transVertex.z * 100000000)
 
         return transVertex
+    
+    def glDirTransform(self, dirVector, vMatrix):
+        augVertex = [[dirVector[0]], 
+                     [dirVector[1]], 
+                     [dirVector[2]], 
+                     [0]]
+        
+        # Multiplies model Matrix per augVertex
+        transVertex = multMatrix(vMatrix, augVertex)
+        
+        # Converts it to a V4
+        transVertex = V4(transVertex[0][0], transVertex[1][0], transVertex[2][0], transVertex[3][0])
 
+        # Converts it to a V3
+        transVertex = V3(transVertex.x,
+                         transVertex.y,
+                         transVertex.z)
+        
+        return transVertex
     def glCreateRotationMatrix(self, rotate = V3(0,0,0)):
 
         rotationX = [
@@ -536,14 +566,13 @@ class Renderer(object):
         self.viewMatrix = invMatrix(camMatrix)
 
     # Loades an .obj model on screen
-    def glLoadModel(self, filename, texture=None, translate = V3(0,0,0), scale = V3(1,1,1), rotate = V3(0,0,0)):
+    def glLoadModel(self, filename, translate = V3(0,0,0), scale = V3(1,1,1), rotate = V3(0,0,0)):
         model = Obj(filename)
 
         modelMatrix = self.glCreateObjectMatrix(translate, scale, rotate)
 
-        light = V3(1,1,0)
-        light = normalize(light)
-
+        rotationMatrix = self.glCreateRotationMatrix(rotate)
+        
         #print("Poligonos: ", len(model.faces))
 
         for face in model.faces:
@@ -553,48 +582,54 @@ class Renderer(object):
             vert0 = model.vertices[face[0][0] - 1]
             vert1 = model.vertices[face[1][0] - 1]
             vert2 = model.vertices[face[2][0] - 1]
+            if vertCount == 4:
+                vert3 = model.vertices[face[3][0] - 1]
 
             vt0 = model.texcoords[face[0][1] - 1]
             vt1 = model.texcoords[face[1][1] - 1]
             vt2 = model.texcoords[face[2][1] - 1]
+            if vertCount == 4:
+                vt3 = model.texcoords[face[3][1] - 1]
 
-            a = self.glTransform(vert0, modelMatrix)
-            b = self.glTransform(vert1, modelMatrix)
-            c = self.glTransform(vert2, modelMatrix)
+            vn0 = model.normals[face[0][2] - 1]
+            vn1 = model.normals[face[1][2] - 1]
+            vn2 = model.normals[face[2][2] - 1]
+
+            vn0 = self.glDirTransform(vn0, rotationMatrix)
+            vn1 = self.glDirTransform(vn1, rotationMatrix)
+            vn2 = self.glDirTransform(vn2, rotationMatrix)
 
             if vertCount == 4:
-                vt3 = model.vertices[face[3][0] - 1]
-                vt2 = model.texcoords[face[3][1] - 1]
-                d = self.glTransform(vt3, modelMatrix)
+                vn3 = model.normals[face[3][2] - 1]
+                vn3 = self.glDirTransform(vn3, rotationMatrix)
+
+            vert0 = self.glTransform(vert0, modelMatrix)
+            vert1 = self.glTransform(vert1, modelMatrix)
+            vert2 = self.glTransform(vert2, modelMatrix)
+
+            if vertCount == 4:
+                vert3 = self.glTransform(vert3, modelMatrix)
             
-            normal = cross(subtract3(V3(vert1[0],vert1[1],vert1[2]), V3(vert0[0],vert0[1],vert0[2])), subtract3(V3(vert2[0],vert2[1],vert2[2]), V3(vert0[0],vert0[1],vert0[2])))
-            normal = normalize(normal)
-            intensity = dot(normal, scalarVec(-1, light))
+            # normal = cross(subtract3(V3(vert1[0],vert1[1],vert1[2]), V3(vert0[0],vert0[1],vert0[2])), subtract3(V3(vert2[0],vert2[1],vert2[2]), V3(vert0[0],vert0[1],vert0[2])))
+            # normal = normalize(normal)
+            # intensity = dot(normal, scalarVec(-1, self.directional_light))
 
-            if intensity > 1:
-                intensity = 1
-            elif intensity < 0:
-                intensity = 0
+            # if intensity > 1:
+            #     intensity = 1
+            # elif intensity < 0:
+            #     intensity = 0
 
-            a = self.glCamTransform(a)
-            b = self.glCamTransform(b)
-            c = self.glCamTransform(c)
-
-            if vertCount == 4:
-                d = self.glCamTransform(d)
-
-            # if round((model.faces.index(face)/len(model.faces)) * 100, 2) == 91.33:
-            #     print("Paso 4")
-            #     print("a = ", a , " b = ", b, " c = ", c)
-
-            #if round((model.faces.index(face)/len(model.faces)) * 100, 2) == 25.58:
-            #print("Paso 4")
-            #print("a = ", a , " b = ", b, " c = ", c)
-
-            self.glTriangle_bc(a, b, c, daColor = None, texCoords = (vt0,vt1,vt2), texture = texture, intensity = intensity)
+            a = self.glCamTransform(vert0)
+            b = self.glCamTransform(vert1)
+            c = self.glCamTransform(vert2)
 
             if vertCount == 4:
-                self.glTriangle_bc(a, c, d, daColor = None, texCoords = (vt0,vt2,vt3), texture = texture, intensity = intensity)
+                d = self.glCamTransform(vert3)
+
+            self.glTriangle_bc(a, b, c, daColor = None, texCoords = (vt0,vt1,vt2), norms = (vn0, vn1, vn2), verts=(vert0, vert1, vert2))
+
+            if vertCount == 4:
+                self.glTriangle_bc(a, c, d, daColor = None, texCoords = (vt0,vt2,vt3), norms = (vn0, vn2, vn3), verts=(vert0, vert2, vert3))
 
     def glFinish(self, filename):
         with open(filename, "wb") as file:
