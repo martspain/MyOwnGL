@@ -354,7 +354,7 @@ class Renderer(object):
                     if 0 <= x < self.width and 0 <= y < self.height:
                         if z < self.zbuffer[x][y] and z <= 1 and z >= -1:
                             
-                            if self.active_shader:
+                            if self.active_shader and verts and texCoords and norms:
                                 r, g, b = self.active_shader(self, verts=verts, baryCoords=(u,v,w), texCoords=texCoords, normals = norms, color= daColor or self.curr_color)
                             else:
                                 b, g, r = daColor or self.curr_color
@@ -362,8 +362,9 @@ class Renderer(object):
                                 g /= 255
                                 r /= 255
 
-                            self.glPoint(x,y, color(r, g, b))
-                            self.zbuffer[x][y] = z
+                            if r != None and g != None and b != None:
+                                self.glPoint(x,y, color(r, g, b))
+                                self.zbuffer[x][y] = z
 
     # Draws a filled triangle
     def glTriangle_standard(self, A, B, C, color = None):
@@ -532,8 +533,8 @@ class Renderer(object):
         return multMatrix(multMatrix(translateMatrix, rotationMatrix), scaleMatrix)
 
     def glViewMatrix(self, translate = V3(0,0,0), rotate = V3(0,0,0)):
-        camMatrix = self.glCreateObjectMatrix(translate, V3(1,1,1), rotate)
-        self.viewMatrix = invMatrix(camMatrix)
+        self.camMatrix = self.glCreateObjectMatrix(translate, V3(1,1,1), rotate)
+        self.viewMatrix = invMatrix(self.camMatrix)
 
     def glProjectionMatrix(self, near = 0.1, far = 1000, fov = 60):
             aspectRatio = self.vpWidth / self.vpHeight
@@ -556,14 +557,14 @@ class Renderer(object):
         up = cross(forward, right)
         up = normalize(up)
 
-        camMatrix = [
+        self.camMatrix = [
             [right.x, up.x, forward.x, camPos.x], 
             [right.y, up.y, forward.y, camPos.y], 
             [right.z, up.z, forward.z, camPos.z],
             [0, 0, 0, 1]
         ]
 
-        self.viewMatrix = invMatrix(camMatrix)
+        self.viewMatrix = invMatrix(self.camMatrix)
 
     # Loades an .obj model on screen
     def glLoadModel(self, filename, translate = V3(0,0,0), scale = V3(1,1,1), rotate = V3(0,0,0)):

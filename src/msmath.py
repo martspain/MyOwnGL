@@ -9,7 +9,7 @@ V3 = namedtuple('Point3', ['x', 'y', 'z'])
 V4 = namedtuple('Point4', ['x', 'y', 'z', 'w'])
 
 pi = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067
-decimalPrecision = 4
+decimalPrecision = 10
 
 # Adds all values in array
 def add(array):
@@ -91,6 +91,14 @@ def cross(A, B):
     k = ((A.x * B.y) - (A.y * B.x))
     product = V3(i, j, k)
     return product
+
+def magnitude(A):
+    if len(A) == 2:
+        return sqroot(A.x * A.x + A.y * A.y)
+    elif len(A) == 3:
+        return sqroot(A.x * A.x + A.y * A.y + A.z * A.z)
+    elif len(A) == 4:
+        return sqroot(A.x * A.x + A.y * A.y + A.z * A.z + A.w * A.w)
 
 # def sqroot(dividend, maxPrecision = None):
     
