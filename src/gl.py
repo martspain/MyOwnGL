@@ -45,11 +45,24 @@ class Renderer(object):
         self.glViewMatrix()
         self.glCreateWindow(width, height)
 
+        self.background = None
         self.active_texture = None
         self.normal_map = None
         self.active_shader = None
         self.directional_light = V3(0,0,-1)
     
+    # Sets the background
+    def glClearBackground(self):
+        if self.background:
+            for x in range(self.vpX, self.vpX + self.vpWidth):
+                for y in range(self.vpY, self.vpY + self.vpHeight):
+
+                    tx = (x - self.vpX) / self.vpWidth
+                    ty = (y - self.vpY) / self.vpHeight
+
+                    #print("tX=",tx," ty=",ty)
+                    self.glPoint(x,y, self.background.getColor(tx, ty))
+
     # Creates the window
     def glCreateWindow(self, width, height):
         self.width = width
@@ -578,6 +591,7 @@ class Renderer(object):
 
         for face in model.faces:
             print(str(round((model.faces.index(face)/len(model.faces)) * 100, 2)) + " %")
+
             vertCount = len(face)
 
             vert0 = model.vertices[face[0][0] - 1]

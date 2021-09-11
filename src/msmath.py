@@ -100,6 +100,8 @@ def magnitude(A):
     elif len(A) == 4:
         return sqroot(A.x * A.x + A.y * A.y + A.z * A.z + A.w * A.w)
 
+# Own implementation of square root
+# Works but is not as efficient as pow()
 # def sqroot(dividend, maxPrecision = None):
     
 #     if maxPrecision:

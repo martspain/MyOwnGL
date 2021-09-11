@@ -1,7 +1,7 @@
 # Blender v2.78 (sub 0) OBJ File: 'Handgun_Game_Blender Gamer Engine.blend'
 # www.blender.org
-mtllib Handgun_obj.mtl
-o bullet_Cube.005
+#mtllib Handgun_obj.mtl
+#o bullet_Cube.005
 v -1.692615 -0.021714 -1.219301
 v 7.334266 -0.021714 -1.219302
 v 7.334265 0.021714 -1.219302

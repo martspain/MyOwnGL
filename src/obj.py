@@ -66,35 +66,57 @@ class Texture(object):
             image.close()
 
         else:
-            img = Image.open(self.filename)
+            self.img = Image.open(self.filename)
 
-            self.width = img.width
-            self.height = img.height
+            self.width = self.img.width
+            self.height = self.img.height
+            self.imgCoords = self.img.load()
 
             self.pixels = []
 
-            for x in range(self.width):
+            for x in range(self.img.size[0]):
                 self.pixels.append([])
-                for y in range(self.height):
-                    r = img.getpixel((x,y))[0] / 255
-                    g = img.getpixel((x,y))[1] / 255
-                    b = img.getpixel((x,y))[2] / 255
+                for y in range(self.img.size[1]):
+                    # r = img.getpixel((x,y))[0] / 255
+                    # g = img.getpixel((x,y))[1] / 255
+                    # b = img.getpixel((x,y))[2] / 255
+                    if type(self.imgCoords[x,y]) == int:
+                        r = self.imgCoords[x,y] / 255
+                        g = self.imgCoords[x,y] / 255
+                        b = self.imgCoords[x,y] / 255
+                    else:
+                        r = self.imgCoords[x,y][0] / 255
+                        g = self.imgCoords[x,y][1] / 255
+                        b = self.imgCoords[x,y][2] / 255
 
                     self.pixels[x].append(color(r, g, b))
 
-            img.close()
-
     def getColor(self, xcoord, ycoord):
-        if 0 <= xcoord < 1 and 0 <= ycoord < 1:
-            x = round(xcoord * self.width)
-            y = round(ycoord * self.height)
-            if y < len(self.pixels):
-                if x < len(self.pixels[y]):
-                    return self.pixels[y][x]
+        if self.filename.find(".bmp") > 0:
+            if 0 <= xcoord < 1 and 0 <= ycoord < 1:
+                x = round(xcoord * self.width)
+                y = round(ycoord * self.height)
+                if y < len(self.pixels):
+                    if x < len(self.pixels[y]):
+                        return self.pixels[y][x]
+                    else:
+                        return color(0,0,0)
                 else:
                     return color(0,0,0)
+                #return self.pixels[y][x]
             else:
                 return color(0,0,0)
-            #return self.pixels[y][x]
         else:
-            return color(0,0,0)
+            if 0 <= xcoord < 1 and 0 <= ycoord < 1:
+                x = round((xcoord) * self.img.size[0])
+                y = round((1-ycoord) * self.img.size[1])
+                if x < self.img.size[0] and y < self.img.size[1]:
+                    return self.pixels[x][y]
+                elif x > self.img.size[0] and y < self.img.size[1]:
+                    return self.pixels[self.img.size[0]-1][y]
+                elif x < self.img.size[0] and y > self.img.size[1]:
+                    return self.pixels[x][self.img.size[1]-1]
+                else:
+                    return self.pixels[self.img.size[0]-1][self.img.size[1]-1]
+            else:
+                return color(0,0,0)
